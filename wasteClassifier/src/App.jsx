@@ -26,8 +26,11 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const m = await tf.loadGraphModel("/tfjs_model/model.json");
-        setModel(m);
+        
+        const m = await tf.loadGraphModel(
+  "https://huggingface.co/jedidiah117/waste-classifier/resolve/main/model.json"
+);
+setModel(m);
       } catch (e) {
         console.error("Model load error:", e);
       } finally {
@@ -49,31 +52,37 @@ export default function App() {
     handleFile(e.dataTransfer.files[0]);
   };
 
-  const predict = async () => {
-    if (!model || !imgRef.current) return;
-    setPredicting(true);
-    try {
-      const tensor = tf.browser
-        .fromPixels(imgRef.current)
-        .resizeBilinear([224, 224])
-        .toFloat().div(127.5).sub(1)
-        .expandDims(0);
+ const predict = async () => {
+  if (!model || !imgRef.current) return;
+  setPredicting(true);
+  try {
+    const tensor = tf.browser
+      .fromPixels(imgRef.current)
+      .resizeBilinear([224, 224])
+      .toFloat().div(127.5).sub(1)
+      .expandDims(0);
 
-      const preds = await model.predict(tensor).data();
-      tensor.dispose();
+    const output = model.predict(tensor);
+    tensor.dispose();
 
-      const sorted = Array.from(preds)
-        .map((prob, i) => ({ label: CLASS_NAMES[i], prob }))
-        .sort((a, b) => b.prob - a.prob);
+    // graph models return an object, extract the actual tensor
+    const preds = await (output instanceof tf.Tensor
+      ? output
+      : Object.values(output)[0]
+    ).data();
 
-      setResults(sorted);
-      setTimeout(() => setRevealed(true), 100);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setPredicting(false);
-    }
-  };
+    const sorted = Array.from(preds)
+      .map((prob, i) => ({ label: CLASS_NAMES[i], prob }))
+      .sort((a, b) => b.prob - a.prob);
+
+    setResults(sorted);
+    setTimeout(() => setRevealed(true), 100);
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setPredicting(false);
+  }
+};
 
   const reset = () => {
     setImage(null);
@@ -101,12 +110,12 @@ export default function App() {
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
 
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/40 grid place-items-center text-lg select-none">
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/40 grid place-items-center text-lg select-none">
               ♻
             </div>
             <div>
-              <h1 className="text-sm font-bold leading-none" style={{ fontFamily: "'Syne', sans-serif" }}>WasteAI</h1>
-              <p className="text-[10px] text-zinc-500 mt-0.5">Intelligent Waste Classifier</p>
+              <h1 className="text-md font-bold leading-none" style={{ fontFamily: "'Syne', sans-serif" }}>WasteAI</h1>
+              <p className="text-[13px] text-zinc-500 mt-0.5">Intelligent Waste Classifier</p>
             </div>
           </div>
 
@@ -202,7 +211,7 @@ export default function App() {
                 <button
                   onClick={predict}
                   disabled={predicting || modelLoading}
-                  className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold text-sm tracking-wide transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold text-sm tracking-wide transition-all hover:scale-102 flex items-center justify-center gap-2"
                   style={{ fontFamily: "'Syne', sans-serif" }}
                 >
                   {predicting ? (
@@ -308,7 +317,7 @@ export default function App() {
 
           {/* Footer note */}
           <p className="text-center text-xs text-zinc-700 mt-8">
-            Powered by MobileNetV2 · Trained on TrashNet · Runs entirely in your browser
+            Powered by MobileNetV2 · Trained on TrashNet Dataset
           </p>
         </div>
       </main>
