@@ -28,7 +28,7 @@ export default function App() {
       try {
         
         const m = await tf.loadGraphModel(
-  "https://huggingface.co/jedidiah117/waste-classifier/resolve/main/model.json?download=true"
+ "https://huggingface.co/jedidiah117/waste-classifier/raw/main/model.json"
 );
 setModel(m);
       } catch (e) {
