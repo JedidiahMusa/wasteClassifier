@@ -28,7 +28,7 @@ export default function App() {
       try {
         
         const m = await tf.loadGraphModel(
- "https://raw.githubusercontent.com/JedidiahMusa/waste-classifier-model/refs/heads/main/model.json"
+"https://raw.githubusercontent.com/JedidiahMusa/waste-classifier-model/main/model.json"
 );
 setModel(m);
       } catch (e) {
